@@ -1,5 +1,5 @@
-﻿namespace ClassLibrary1;
+﻿namespace ClassLibrary1.GraphBuilder;
 
 public interface IGraphBuilder {
-    public Graph BuildGraph();
+    public Graph.Graph BuildGraph();
 }

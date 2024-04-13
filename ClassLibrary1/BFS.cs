@@ -5,13 +5,13 @@ public class BFS {
     private readonly HashSet<int> nodesAlreadyVisited = new HashSet<int>();
     private Dictionary<int, int> cameFrom = new Dictionary<int, int>();
 
-    private readonly Graph g;
+    private readonly Graph.Graph g;
     private readonly int startId;
     private readonly int endId;
 
     private bool completed = false;
 
-    public BFS(Graph g, int start, int end) {
+    public BFS(Graph.Graph g, int start, int end) {
         this.g = g;
         startId = g.Nodes[start].id;
         endId = g.Nodes[end].id;
@@ -20,10 +20,10 @@ public class BFS {
         cameFrom[startId] = -1;
     }
 
-    public BFS(Graph g, int startX, int startY, int endX, int endY) :
+    public BFS(Graph.Graph g, int startX, int startY, int endX, int endY) :
         this(g,
-            GraphHelperMethods.ConvertToId(startX, startY, g.Map.GetLength(1)),
-            GraphHelperMethods.ConvertToId(endX, endY, g.Map.GetLength(1))
+            g.ConvertToId(startX, startY),
+            g.ConvertToId(endX, endY)
         ) {
     }
 

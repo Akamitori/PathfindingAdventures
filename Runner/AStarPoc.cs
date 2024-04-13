@@ -1,15 +1,18 @@
 ﻿using ClassLibrary1;
+using ClassLibrary1.Graph;
+using ClassLibrary1.GraphBuilder;
 
 namespace Runner;
 
 public class Poc {
     public static void Run(int[,] someMap) {
-        var x = new Graph(someMap);
+        var graphBuilder = new GraphBuilderFromMapWithDiagonals(someMap);
+        var x = graphBuilder.BuildGraph();
 
         int ManhattanDistanceHeuristic((int x, int y) a, (int x, int y) b) => Math.Abs(a.x - b.x) + Math.Abs(a.y - b.y);
 
 
-        var algo = new AStar(x, 0, 0, 2, 1, ManhattanDistanceHeuristic);
+        var algo = new AStar(x, 0, 0, 2, 1, ManhattanDistanceHeuristic, _ => true);
 
         while (!algo.ExecuteStep()) {
             ;
@@ -17,18 +20,33 @@ public class Poc {
 
         var result = algo.GetPath();
 
-        var columns = someMap.GetLength(1);
         for (var i = 0; i < result.GetLength(0); i++) {
             var currentNode = result[i];
-            Display(currentNode);
+            Display(x, currentNode);
             Thread.Sleep(1000);
-            Console.Clear();
+            if (i != result.GetLength(0) - 1) {
+                Console.Clear();
+            }
         }
+
+        var totalCost = algo.GetPathCost();
+
+        var s = "[";
+        for (var i = 0; i < result.GetLength(0); i++) {
+            s += $"{result[i]}, ";
+        }
+
+        s = s.Trim(' ');
+        s = s.Trim(',');
+        s += "]";
+
+        Console.WriteLine(s);
+        Console.WriteLine(totalCost);
 
         return;
 
-        void Display(int currentNode) {
-            var (row, column) = GraphHelperMethods.ConvertFromId(currentNode, x.Map.GetLength(1));
+        void Display(Graph graph, int currentNode) {
+            var (row, column) = graph.ConvertFromId(currentNode);
 
             for (var i = 0; i < someMap.GetLength(0); i++) {
                 var s = "";

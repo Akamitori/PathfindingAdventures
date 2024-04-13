@@ -1,4 +1,4 @@
-﻿namespace ClassLibrary1;
+﻿namespace ClassLibrary1.HierachicalGraph;
 
 public struct Coords {
     public int X;

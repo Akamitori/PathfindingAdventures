@@ -26,4 +26,4 @@ int[,] someMap = new[,] {
     { 2, 5, 1, 1 	,     	 2, 5, 1, 1 	,     	 2, 5, 1, 1 	,     	 2, 5, 1, 1 	},
 };
 
-Poc.Run(someMap);
+HiearchicalGraphPoc.Run(someMap,4);

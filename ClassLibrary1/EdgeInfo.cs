@@ -2,7 +2,7 @@
 
 public struct EdgeInfo {
     public int neighbor;
-    public int cost;
+    public float cost;
     public string ExtraData;
     public bool enabled;
 }

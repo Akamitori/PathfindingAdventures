@@ -1,8 +1,11 @@
-﻿using ClassLibrary1;
+﻿using ClassLibrary1.HierarchicalGraph;
+
+namespace ClassLibrary1.HierachicalGraph;
 
 public class Cluster {
-    public int id;
+    public readonly int id;
     public Coords[,] subMap;
+    
 
     public int StartY;
     public int EndY;
@@ -28,6 +31,10 @@ public class Cluster {
     
     public bool Contains(Coords coords) {
         return coords.X >= StartX && coords.X <= EndX
-                              && coords.Y >= StartY && coords.Y <= EndY;
+                                  && coords.Y >= StartY && coords.Y <= EndY;
+    }
+
+    public override int GetHashCode() {
+        return id.GetHashCode();
     }
 }
