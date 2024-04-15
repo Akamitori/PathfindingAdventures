@@ -22,7 +22,7 @@ public class Cluster {
         subMap = new Coords[rows, columns];
     }
 
-    public void AddItem(int y, int x, int index) {
+    public void AddItem(int x, int y, int index) {
         var columns = subMap.GetLength(1);
         var row = index / columns;
         var column = index % columns;

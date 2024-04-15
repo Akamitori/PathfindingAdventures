@@ -16,16 +16,16 @@ public class AStar<T> {
     private readonly Func<T, T, int> heuristic;
     private readonly Func<T, bool> filter;
 
-    public AStar(Graph.Graph<T> g, int start, int end, Func<T, T, int> heuristic,
+    public AStar(Graph.Graph<T> g, int startId, int endId, Func<T, T, int> heuristic,
         Func<T, bool> filter) {
         this.g = g;
-        startId = g.Nodes[start].Id;
-        endId = g.Nodes[end].Id;
-        frontier.Enqueue(startId, 0);
+        this.startId = startId;
+        this.endId = endId;
+        frontier.Enqueue(this.startId, 0);
         completed = false;
-        cameFrom[startId] = -1;
-        costSoFar[start] = 0;
-        EndPointData = g.ConvertFromId(end);
+        cameFrom[this.startId] = -1;
+        costSoFar[startId] = 0;
+        EndPointData = g.ConvertFromId(endId);
         this.heuristic = heuristic;
         this.filter = filter;
     }
@@ -80,7 +80,7 @@ public class AStar<T> {
                     costSoFar[next] = newCost;
                     var nextCoords = g.ConvertFromId(next);
                     var priority = newCost + heuristic(EndPointData, nextCoords);
-                    frontier.Enqueue(next, newCost);
+                    frontier.Enqueue(next, priority);
                     cameFrom[next] = currentNode;
                 }
             }

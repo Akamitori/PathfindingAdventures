@@ -11,7 +11,7 @@ public class AStarPoc {
         var x = graphBuilder.BuildGraph();
 
         int ManhattanDistanceHeuristic(Coords a, Coords b) => Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y);
-        var algo = new AStar<Coords>(x, new Coords(0, 0), new Coords(2, 1), ManhattanDistanceHeuristic, _ => true);
+        var algo = new AStar<Coords>(x, new Coords(0, 0), new Coords(1, 2), ManhattanDistanceHeuristic, _ => true);
 
         while (!algo.ExecuteStep()) {
             ;
@@ -45,13 +45,13 @@ public class AStarPoc {
         return;
 
         void Display(Graph<Coords> graph, int currentNode) {
-            var result = graph.ConvertFromId(currentNode);
+            var coords = graph.ConvertFromId(currentNode);
 
             for (var i = 0; i < someMap.GetLength(0); i++) {
                 var s = "";
                 for (var j = 0; j < someMap.GetLength(1); j++) {
                     char thingToDisplay;
-                    if (i == result.X && j == result.Y) {
+                    if (i == coords.Y && j == coords.X) {
                         thingToDisplay = 'X';
                     }
                     else {

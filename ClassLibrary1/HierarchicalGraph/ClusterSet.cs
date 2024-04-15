@@ -1,5 +1,4 @@
-﻿using ClassLibrary1.Graph;
-using ClassLibrary1.GraphBuilder;
+﻿using ClassLibrary1.GraphBuilder;
 using ClassLibrary1.HierachicalGraph;
 
 namespace ClassLibrary1.HierarchicalGraph;
@@ -11,21 +10,20 @@ public class ClusterSet {
 
     private int emptyNeighborValue = -1;
 
-    private readonly Dictionary<Cluster, Dictionary<RelativePosition, List<EntranceSet>>> entranceSet;
+    private readonly List<EntranceSet> entranceSet;
     private readonly int[,] map;
-    private readonly int clusterSize;
+    public readonly int clusterSize;
     private readonly Bounds2D mapBounds2D;
 
-    public ClusterSet(int[,] map, int clusterSize, Graph<Coords> lowerLevelGraph) {
+    public IEnumerable<EntranceSet> ClusterEntranceSets => entranceSet;
+
+    public ClusterSet(int[,] map, int clusterSize) {
         this.map = map;
         this.clusterSize = clusterSize;
         mapBounds2D = new Bounds2D(map.GetLength(0), map.GetLength(1));
         BuildClusters();
         entranceSet = CalculateEntrances();
-        var builder = new GraphBuilderFromEntrancesAndClusters(this, entranceSet, clusterSize, lowerLevelGraph);
-        var g = builder.BuildGraph();
     }
-
 
     private void BuildClusters() {
         var mapRows = mapBounds2D.FirstDimensionEnd;
@@ -56,13 +54,13 @@ public class ClusterSet {
                         var y = startRow + localY;
                         var x = startColumn + localX;
 
-                        cluster.AddItem(y, x, clusterItemCounter++);
+                        cluster.AddItem(x, y, clusterItemCounter++);
                     }
                 }
 
                 var clusterCoords = ConvertFromId(clusterCounter, clusters.GetLength(1));
 
-                clusters[clusterCoords.row, clusterCoords.column] = cluster;
+                clusters[clusterCoords.Y, clusterCoords.X] = cluster;
                 clusterCounter++;
             }
         }
@@ -107,19 +105,19 @@ public class ClusterSet {
         return x * secondDimension + y;
     }
 
-    private (int row, int column) ConvertFromId(int id, int secondDimension) {
+    private Coords ConvertFromId(int id, int secondDimension) {
         var columns = secondDimension;
         var row = id / columns;
         var column = id % columns;
-        return (row, column);
+        return new Coords(column, row);
     }
 
     public Cluster GetCluster(int clusterId) {
-        var (row, column) = ConvertFromId(clusterId, clusters.GetLength(1));
-        return clusters[row, column];
+        var clusterCoords = ConvertFromId(clusterId, clusters.GetLength(1));
+        return clusters[clusterCoords.Y, clusterCoords.X];
     }
 
-    public (int row, int column) GetClusterCoords(int clusterId) {
+    public Coords GetClusterCoords(int clusterId) {
         return ConvertFromId(clusterId, clusters.GetLength(1));
     }
 
@@ -136,15 +134,15 @@ public class ClusterSet {
             var item = ClusterAdjacency[clusterId, i];
             var hasNeighbor = item >= 0;
             if (hasNeighbor) {
-                var (row, column) = ConvertFromId(item, clusters.GetLength(1));
-                yield return clusters[row, column];
+                var clusterCoords = ConvertFromId(item, clusters.GetLength(1));
+                yield return clusters[clusterCoords.Y, clusterCoords.X];
             }
         }
     }
 
-    private Dictionary<Cluster, Dictionary<RelativePosition, List<EntranceSet>>> CalculateEntrances() {
+    private List<EntranceSet> CalculateEntrances() {
         var hashSet = new HashSet<(int, int)>();
-        var entrances = new Dictionary<Cluster, Dictionary<RelativePosition, List<EntranceSet>>>();
+        var entrances = new List<EntranceSet>();
 
 
         foreach (var cluster in ClusterItems()) {
@@ -159,15 +157,8 @@ public class ClusterSet {
                 GetCluster(neighborId);
                 var neighborCluster = GetCluster(neighborId);
 
-
-                var result = BuildEntrances(cluster, neighborCluster);
-
-                if (!entrances.TryGetValue(cluster, out var entranceData)) {
-                    entranceData = new Dictionary<RelativePosition, List<EntranceSet>>();
-                    entrances[cluster] = entranceData;
-                }
-
-                entranceData.Add(result.positionInCluster1, result.entrances);
+                var set = BuildEntrances(cluster, neighborCluster);
+                entrances.AddRange(set);
 
                 hashSet.Add((neighborCluster.id, cluster.id));
             }
@@ -176,9 +167,8 @@ public class ClusterSet {
         return entrances;
     }
 
-    private (List<EntranceSet> entrances, RelativePosition positionInCluster1, RelativePosition positionInCluster2)
-        BuildEntrances(
-            Cluster cluster, Cluster neighBorCluster) {
+    private List<EntranceSet> BuildEntrances(
+        Cluster cluster, Cluster neighBorCluster) {
         var clusterCoords = GetClusterCoords(cluster.id);
         var neighborClusterCoords = GetClusterCoords(neighBorCluster.id);
 
@@ -241,8 +231,7 @@ public class ClusterSet {
                 );
             }
 
-
-            return (entrances, relativePosition, neighborRelativePosition);
+            return entrances;
         }
         else {
             Cluster rightCluster;
@@ -259,14 +248,13 @@ public class ClusterSet {
             }
 
             for (var x = 0; x < cluster.subMap.GetLength(1); x++) {
-                var coords1 = leftCluster.subMap[x, 0];
-                var lastIndex = rightCluster.subMap.GetLength(1) - 1;
-                var coords2 = rightCluster.subMap[x, lastIndex];
+                var coords1 = leftCluster.subMap[x, leftCluster.subMap.GetLength(1) - 1];
+                var coords2 = rightCluster.subMap[x, 0];
 
                 var tile1 = map[coords1.Y, coords1.X];
                 var tile2 = map[coords2.Y, coords2.X];
 
-                if (tile1 > 0 && tile2 > 0) {
+                if (tile1 != emptyNeighborValue && tile2 != emptyNeighborValue) {
                     tiles.Add(coords1);
                     symmetricalTiles.Add(coords2);
                 }
@@ -293,8 +281,7 @@ public class ClusterSet {
                 );
             }
 
-
-            return (entrances, relativePosition, neighborRelativePosition);
+            return entrances;
         }
     }
 
@@ -305,13 +292,13 @@ public class ClusterSet {
     /// <param name="border1"></param>
     /// <param name="border2"></param>
     /// <returns></returns>
-    private RelativePosition DetermineAdjacency((int row, int column) border1, (int row, int column) border2) {
-        if (border1.row == border2.row) {
-            return border1.column < border2.column ? RelativePosition.Right : RelativePosition.Left;
+    private RelativePosition DetermineAdjacency(Coords border1, Coords border2) {
+        if (border1.Y == border2.Y) {
+            return border1.X < border2.X ? RelativePosition.Right : RelativePosition.Left;
         }
 
-        if (border1.column == border2.column) {
-            return border1.row < border2.row ? RelativePosition.Down : RelativePosition.Up;
+        if (border1.X == border2.X) {
+            return border1.Y < border2.Y ? RelativePosition.Down : RelativePosition.Up;
         }
 
         throw new InvalidDataException();

@@ -10,7 +10,7 @@ public class GridGraph : Graph<Coords> {
     }
     
     public override int ConvertToId(Coords nodeInfo) {
-        return nodeInfo.X * gridColumns + nodeInfo.Y;
+        return nodeInfo.Y * gridColumns + nodeInfo.X;
     }
 
     public override Coords ConvertFromId(int id) {

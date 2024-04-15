@@ -3,16 +3,17 @@ using ClassLibrary1.HierarchicalGraph;
 
 namespace ClassLibrary1.Graph;
 
-public class ClusterGraph : Graph<ClusterNodeInfo> {
+public class HierarchicalGraph : Graph<ClusterNodeInfo> {
     private readonly Dictionary<Coords, int> nodeIdsFromCoords;
     private readonly Dictionary<int, int> neighborCount;
     
     private Graph.Graph<Coords> LowLevelGraph;
 
 
-    public ClusterGraph(Node<ClusterNodeInfo>[] nodes, EdgeInfo[,] adjacencyGraph, Dictionary<Coords, int> nodeIds, Dictionary<int, int> neighborCount)  : base(nodes, adjacencyGraph) {
+    public HierarchicalGraph(Node<ClusterNodeInfo>[] nodes, EdgeInfo[,] adjacencyGraph, Dictionary<Coords, int> nodeIds, Dictionary<int, int> neighborCount, Graph<Coords> lowLevelGraph)  : base(nodes, adjacencyGraph) {
         this.nodeIdsFromCoords = nodeIds;
         this.neighborCount = neighborCount;
+        LowLevelGraph = lowLevelGraph;
     }
 
 

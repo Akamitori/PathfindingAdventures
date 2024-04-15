@@ -27,18 +27,19 @@ public class GraphBuilderFromMap : IGraphBuilder<Coords> {
                 var neighborIndexes = GetNeighborIndexes(i, j);
 
 
-                var nodeId = ConvertToId(i, j, mapBounds.SecondDimensionEnd);
-                var node = new Node<Coords>(new Coords(i, j), nodeId);
+                var coords = new Coords(j, i);
+                var nodeId = ConvertToId(coords, mapBounds.SecondDimensionEnd);
+                var node = new Node<Coords>(coords, nodeId);
                 nodeSet[nodeCount] = node;
 
                 for (var k = 0; k < neighborIndexes.Count; k++) {
-                    var (x, y) = neighborIndexes[k];
-                    var neighborCost = map[x, y];
-                    var neighborNodeId = ConvertToId(x, y, mapBounds.SecondDimensionEnd);
+                    var (y, x) = neighborIndexes[k];
+                    var neighborCost = map[y, x];
+                    var neighborNodeId = ConvertToId(new Coords(x, y), mapBounds.SecondDimensionEnd);
                     var edgeInfo = new EdgeInfo() {
                         neighbor = neighborNodeId,
                         enabled = neighborCost >= 0,
-                        cost = CalculateEdgeCost(neighborCost, (i, j), (x, y))
+                        cost = CalculateEdgeCost(neighborCost, (i, j), (y, x))
                     };
                     adjacencyTable[nodeId, k] = edgeInfo;
                 }
@@ -67,7 +68,7 @@ public class GraphBuilderFromMap : IGraphBuilder<Coords> {
         return neighborCost >= 0 ? neighborCost : int.MaxValue;
     }
 
-    private static int ConvertToId(int x, int y, int gridColumns) {
-        return x * gridColumns + y;
+    private static int ConvertToId(Coords c, int gridColumns) {
+        return c.Y * gridColumns + c.X;
     }
 }
