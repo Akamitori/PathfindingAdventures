@@ -6,7 +6,7 @@ public class Cluster {
     public readonly int id;
     public Coords[,] subMap;
     
-
+    // inclusive limits
     public int StartY;
     public int EndY;
 

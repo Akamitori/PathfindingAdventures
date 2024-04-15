@@ -1,4 +1,5 @@
-﻿using ClassLibrary1.GraphBuilder;
+﻿using ClassLibrary1.Graph;
+using ClassLibrary1.GraphBuilder;
 using ClassLibrary1.HierachicalGraph;
 
 namespace ClassLibrary1.HierarchicalGraph;
@@ -10,19 +11,19 @@ public class ClusterSet {
 
     private int emptyNeighborValue = -1;
 
-    private readonly Dictionary<Cluster, Dictionary<RelativePosition, List<Entrance>>> entranceSet;
+    private readonly Dictionary<Cluster, Dictionary<RelativePosition, List<EntranceSet>>> entranceSet;
     private readonly int[,] map;
     private readonly int clusterSize;
     private readonly Bounds2D mapBounds2D;
 
-    public ClusterSet(int[,] map, int clusterSize) {
+    public ClusterSet(int[,] map, int clusterSize, Graph<Coords> lowerLevelGraph) {
         this.map = map;
         this.clusterSize = clusterSize;
         mapBounds2D = new Bounds2D(map.GetLength(0), map.GetLength(1));
         BuildClusters();
         entranceSet = CalculateEntrances();
-        //var builder = new GraphBuilderFromEntrancesAndClusters(this, entranceSet, clusterSize);
-        //var abstractGraph = builder.BuildGraph();
+        var builder = new GraphBuilderFromEntrancesAndClusters(this, entranceSet, clusterSize, lowerLevelGraph);
+        var g = builder.BuildGraph();
     }
 
 
@@ -36,25 +37,24 @@ public class ClusterSet {
         clusters = new Cluster[clusterRows, clusterColumns];
 
         var clusterCounter = 0;
-        var sectorRows = clusterSize;
-        var sectorColumns = clusterSize;
 
-        for (var startY = 0; startY < mapRows; startY += clusterSize) {
-            for (var startX = 0; startX < mapColumns; startX += clusterSize) {
-                var totalRows = Math.Min(sectorRows, mapRows - startY);
-                var totalColumns = Math.Min(sectorColumns, mapColumns - startX);
+        for (var startRow = 0; startRow < mapRows; startRow += clusterSize) {
+            for (var startColumn = 0; startColumn < mapColumns; startColumn += clusterSize) {
+                var sectorRows = Math.Min(clusterSize, mapRows - startRow);
+                var sectorColumns = Math.Min(clusterSize, mapColumns - startColumn);
 
 
-                var endY = startY + totalRows - 1;
-                var endX = startX + totalColumns - 1;
+                var endRow = startRow + sectorRows - 1;
+                var endColumn = startColumn + sectorColumns - 1;
 
-                var cluster = new Cluster(clusterCounter, totalRows, totalColumns, startX, endX, startY, endY);
+                var cluster = new Cluster(clusterCounter, sectorRows, sectorColumns, startRow, endRow, startColumn,
+                    endColumn);
 
                 var clusterItemCounter = 0;
-                for (var localY = 0; localY < totalRows; localY++) {
-                    for (var localX = 0; localX < totalColumns; localX++) {
-                        var y = startY + localY;
-                        var x = startX + localX;
+                for (var localY = 0; localY < sectorRows; localY++) {
+                    for (var localX = 0; localX < sectorColumns; localX++) {
+                        var y = startRow + localY;
+                        var x = startColumn + localX;
 
                         cluster.AddItem(y, x, clusterItemCounter++);
                     }
@@ -115,12 +115,12 @@ public class ClusterSet {
     }
 
     public Cluster GetCluster(int clusterId) {
-        var (row, column) = ConvertFromId(clusterId, mapBounds2D.SecondDimensionEnd);
+        var (row, column) = ConvertFromId(clusterId, clusters.GetLength(1));
         return clusters[row, column];
     }
 
     public (int row, int column) GetClusterCoords(int clusterId) {
-        return ConvertFromId(clusterId, mapBounds2D.SecondDimensionEnd);
+        return ConvertFromId(clusterId, clusters.GetLength(1));
     }
 
     public IEnumerable<Cluster> ClusterItems() {
@@ -136,15 +136,15 @@ public class ClusterSet {
             var item = ClusterAdjacency[clusterId, i];
             var hasNeighbor = item >= 0;
             if (hasNeighbor) {
-                var (row, column) = ConvertFromId(item, mapBounds2D.SecondDimensionEnd);
+                var (row, column) = ConvertFromId(item, clusters.GetLength(1));
                 yield return clusters[row, column];
             }
         }
     }
 
-    private Dictionary<Cluster, Dictionary<RelativePosition, List<Entrance>>> CalculateEntrances() {
+    private Dictionary<Cluster, Dictionary<RelativePosition, List<EntranceSet>>> CalculateEntrances() {
         var hashSet = new HashSet<(int, int)>();
-        var entrances = new Dictionary<Cluster, Dictionary<RelativePosition, List<Entrance>>>();
+        var entrances = new Dictionary<Cluster, Dictionary<RelativePosition, List<EntranceSet>>>();
 
 
         foreach (var cluster in ClusterItems()) {
@@ -162,14 +162,12 @@ public class ClusterSet {
 
                 var result = BuildEntrances(cluster, neighborCluster);
 
-                var clusterEntrances =
-                    entrances.GetValueOrDefault(cluster, new Dictionary<RelativePosition, List<Entrance>>());
-                var neighborEntrances = entrances.GetValueOrDefault(neighborCluster,
-                    new Dictionary<RelativePosition, List<Entrance>>());
+                if (!entrances.TryGetValue(cluster, out var entranceData)) {
+                    entranceData = new Dictionary<RelativePosition, List<EntranceSet>>();
+                    entrances[cluster] = entranceData;
+                }
 
-                clusterEntrances.Add(result.positionInCluster1, result.entrances);
-                neighborEntrances.Add(result.positionInCluster2, result.entrances);
-
+                entranceData.Add(result.positionInCluster1, result.entrances);
 
                 hashSet.Add((neighborCluster.id, cluster.id));
             }
@@ -178,33 +176,34 @@ public class ClusterSet {
         return entrances;
     }
 
-    private (List<Entrance> entrances, RelativePosition positionInCluster1, RelativePosition positionInCluster2)
+    private (List<EntranceSet> entrances, RelativePosition positionInCluster1, RelativePosition positionInCluster2)
         BuildEntrances(
             Cluster cluster, Cluster neighBorCluster) {
         var clusterCoords = GetClusterCoords(cluster.id);
         var neighborClusterCoords = GetClusterCoords(neighBorCluster.id);
 
 
-        var adjacency = DetermineAdjacency(clusterCoords, neighborClusterCoords);
+        var relativePosition = DetermineAdjacency(clusterCoords, neighborClusterCoords);
 
-        var entrances = new List<Entrance>();
-        var verticalAdjacency = adjacency is RelativePosition.Up or RelativePosition.Down;
-        var entranceLength = 0;
+        var entrances = new List<EntranceSet>();
+        var verticalAdjacency = relativePosition is RelativePosition.Up or RelativePosition.Down;
         var tiles = new List<Coords>();
         var symmetricalTiles = new List<Coords>();
         if (verticalAdjacency) {
             Cluster upperCluster;
             Cluster lowerCluster;
-            var neighborRelativePosition = RelativePosition.Down;
-            if (adjacency == RelativePosition.Up) {
+            RelativePosition neighborRelativePosition;
+            if (relativePosition == RelativePosition.Up) {
                 upperCluster = neighBorCluster;
                 lowerCluster = cluster;
+                neighborRelativePosition = RelativePosition.Down;
             }
             else {
                 upperCluster = cluster;
                 lowerCluster = neighBorCluster;
                 neighborRelativePosition = RelativePosition.Up;
             }
+
 
             for (var x = 0; x < cluster.subMap.GetLength(0); x++) {
                 var coords1 = lowerCluster.subMap[0, x];
@@ -214,31 +213,42 @@ public class ClusterSet {
                 var tile1 = map[coords1.Y, coords1.X];
                 var tile2 = map[coords2.Y, coords2.X];
 
-                if (tile1 > 0 && tile2 > 0) {
+                if (tile1 != emptyNeighborValue && tile2 != emptyNeighborValue) {
                     tiles.Add(coords1);
                     symmetricalTiles.Add(coords2);
-                    entranceLength++;
                 }
                 else if (symmetricalTiles.Count > 0) {
-                    entrances.Add(new Entrance(entranceLength, tiles.ToArray(), symmetricalTiles.ToArray()));
+                    entrances.Add(new EntranceSet(tiles.ToArray(),
+                        lowerCluster.id,
+                        neighborRelativePosition,
+                        symmetricalTiles.ToArray(),
+                        upperCluster.id,
+                        relativePosition)
+                    );
                     tiles.Clear();
                     symmetricalTiles.Clear();
-                    entranceLength = 0;
                 }
             }
 
-            if (entranceLength > 0) {
-                entrances.Add(new Entrance(entranceLength, tiles.ToArray(), symmetricalTiles.ToArray()));
+            if (tiles.Count > 0) {
+                entrances.Add(new EntranceSet(tiles.ToArray(),
+                        lowerCluster.id,
+                        neighborRelativePosition, // if our neighbor is down so is our entrance and vice verca
+                        symmetricalTiles.ToArray(),
+                        upperCluster.id,
+                        relativePosition
+                    )
+                );
             }
 
 
-            return (entrances, adjacency, neighborRelativePosition);
+            return (entrances, relativePosition, neighborRelativePosition);
         }
         else {
             Cluster rightCluster;
             Cluster leftCluster;
             var neighborRelativePosition = RelativePosition.Left;
-            if (adjacency == RelativePosition.Right) {
+            if (relativePosition == RelativePosition.Right) {
                 rightCluster = neighBorCluster;
                 leftCluster = cluster;
             }
@@ -259,22 +269,32 @@ public class ClusterSet {
                 if (tile1 > 0 && tile2 > 0) {
                     tiles.Add(coords1);
                     symmetricalTiles.Add(coords2);
-                    entranceLength++;
                 }
                 else {
-                    entrances.Add(new Entrance(entranceLength, tiles.ToArray(), symmetricalTiles.ToArray()));
+                    entrances.Add(new EntranceSet(tiles.ToArray(),
+                        leftCluster.id,
+                        neighborRelativePosition,
+                        symmetricalTiles.ToArray(),
+                        rightCluster.id,
+                        relativePosition)
+                    );
                     tiles.Clear();
                     symmetricalTiles.Clear();
-                    entranceLength = 0;
                 }
             }
 
-            if (entranceLength > 0) {
-                entrances.Add(new Entrance(entranceLength, tiles.ToArray(), symmetricalTiles.ToArray()));
+            if (tiles.Count > 0) {
+                entrances.Add(new EntranceSet(tiles.ToArray(),
+                    leftCluster.id,
+                    neighborRelativePosition,
+                    symmetricalTiles.ToArray(),
+                    rightCluster.id,
+                    relativePosition)
+                );
             }
 
 
-            return (entrances, adjacency, neighborRelativePosition);
+            return (entrances, relativePosition, neighborRelativePosition);
         }
     }
 

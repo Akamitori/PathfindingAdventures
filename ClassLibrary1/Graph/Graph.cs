@@ -1,7 +1,7 @@
 ﻿namespace ClassLibrary1.Graph;
 
-public abstract class Graph {
-    public Node[] Nodes;
+public abstract class Graph<T> {
+    public Node<T>[] Nodes;
 
     public EdgeInfo[,] Adjacency;
 
@@ -9,14 +9,14 @@ public abstract class Graph {
 
     public int GraphId;
 
-    public Graph(Node[] nodes, EdgeInfo[,] adjacency) {
+    public Graph(Node<T>[] nodes, EdgeInfo[,] adjacency) {
         Nodes = nodes;
         Adjacency = adjacency;
     }
 
-    public abstract int ConvertToId(int x, int y);
+    public abstract int ConvertToId(T nodeInfo);
     
-    public abstract (int, int) ConvertFromId(int id);
+    public abstract T ConvertFromId(int id);
     
     public List<EdgeInfo> GetNeighborsOfNode(int nodeId) {
         var result = new List<EdgeInfo>();

@@ -1,29 +1,29 @@
 ﻿namespace ClassLibrary1;
 
-public class BFS {
+public class BFS<T> {
     private readonly Queue<int> nodesToProcess = new Queue<int>();
     private readonly HashSet<int> nodesAlreadyVisited = new HashSet<int>();
     private Dictionary<int, int> cameFrom = new Dictionary<int, int>();
 
-    private readonly Graph.Graph g;
+    private readonly Graph.Graph<T> g;
     private readonly int startId;
     private readonly int endId;
 
     private bool completed = false;
 
-    public BFS(Graph.Graph g, int start, int end) {
+    public BFS(Graph.Graph<T> g, int start, int end) {
         this.g = g;
-        startId = g.Nodes[start].id;
-        endId = g.Nodes[end].id;
+        startId = g.Nodes[start].Id;
+        endId = g.Nodes[end].Id;
         nodesToProcess.Enqueue(startId);
         completed = false;
         cameFrom[startId] = -1;
     }
 
-    public BFS(Graph.Graph g, int startX, int startY, int endX, int endY) :
+    public BFS(Graph.Graph<T> g, T start, T end) :
         this(g,
-            g.ConvertToId(startX, startY),
-            g.ConvertToId(endX, endY)
+            g.ConvertToId(start),
+            g.ConvertToId(end)
         ) {
     }
 

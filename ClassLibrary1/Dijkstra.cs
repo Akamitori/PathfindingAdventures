@@ -1,30 +1,30 @@
 ﻿namespace ClassLibrary1;
 
-public class Dijkstra {
+public class Dijkstra<T> {
     private readonly PriorityQueue<int, float> frontier = new PriorityQueue<int, float>();
     private Dictionary<int, int> cameFrom = new Dictionary<int, int>();
     private Dictionary<int, float> costSoFar = new Dictionary<int, float>();
 
-    private readonly Graph.Graph g;
+    private readonly Graph.Graph<T> g;
     private readonly int startId;
     private readonly int endId;
 
     private bool completed = false;
 
-    public Dijkstra(Graph.Graph g, int start, int end) {
+    public Dijkstra(Graph.Graph<T> g, int start, int end) {
         this.g = g;
-        startId = g.Nodes[start].id;
-        endId = g.Nodes[end].id;
+        startId = g.Nodes[start].Id;
+        endId = g.Nodes[end].Id;
         frontier.Enqueue(startId, 0);
         completed = false;
         cameFrom[startId] = -1;
         costSoFar[start] = 0;
     }
 
-    public Dijkstra(Graph.Graph g, int startX, int startY, int endX, int endY) :
+    public Dijkstra(Graph.Graph<T> g, T start, T end) :
         this(g,
-            g.ConvertToId(startX, startY),
-            g.ConvertToId(endX, endY)
+            g.ConvertToId(start),
+            g.ConvertToId(end)
         ) {
     }
 

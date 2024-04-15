@@ -1,19 +1,22 @@
-﻿namespace ClassLibrary1.Graph;
+﻿using ClassLibrary1.HierachicalGraph;
 
-public class GridGraph : Graph {
+namespace ClassLibrary1.Graph;
 
+public class GridGraph : Graph<Coords> {
     private readonly int gridColumns;
-    public GridGraph(Node[] nodes, EdgeInfo[,] adjacency, int mapColumns) : base(nodes, adjacency) {
+
+    public GridGraph(Node<Coords>[] nodes, EdgeInfo[,] adjacency, int mapColumns) : base(nodes, adjacency) {
         gridColumns = mapColumns;
     }
     
-    public override int ConvertToId(int x, int y) {
-        return x * gridColumns + y;
+    public override int ConvertToId(Coords nodeInfo) {
+        return nodeInfo.X * gridColumns + nodeInfo.Y;
     }
 
-    public override (int, int) ConvertFromId(int id) {
-        var row = id / gridColumns;
-        var column = id % gridColumns;
-        return (row, column);
+    public override Coords ConvertFromId(int id) {
+        return Nodes[id].Data;
+        // var row = id / gridColumns;
+        // var column = id % gridColumns;
+        // return new Coords(row, column);
     }
 }

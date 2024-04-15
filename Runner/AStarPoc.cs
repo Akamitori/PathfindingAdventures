@@ -1,18 +1,17 @@
 ﻿using ClassLibrary1;
 using ClassLibrary1.Graph;
 using ClassLibrary1.GraphBuilder;
+using ClassLibrary1.HierachicalGraph;
 
 namespace Runner;
 
-public class Poc {
+public class AStarPoc {
     public static void Run(int[,] someMap) {
         var graphBuilder = new GraphBuilderFromMapWithDiagonals(someMap);
         var x = graphBuilder.BuildGraph();
 
-        int ManhattanDistanceHeuristic((int x, int y) a, (int x, int y) b) => Math.Abs(a.x - b.x) + Math.Abs(a.y - b.y);
-
-
-        var algo = new AStar(x, 0, 0, 2, 1, ManhattanDistanceHeuristic, _ => true);
+        int ManhattanDistanceHeuristic(Coords a, Coords b) => Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y);
+        var algo = new AStar<Coords>(x, new Coords(0, 0), new Coords(2, 1), ManhattanDistanceHeuristic, _ => true);
 
         while (!algo.ExecuteStep()) {
             ;
@@ -45,14 +44,14 @@ public class Poc {
 
         return;
 
-        void Display(Graph graph, int currentNode) {
-            var (row, column) = graph.ConvertFromId(currentNode);
+        void Display(Graph<Coords> graph, int currentNode) {
+            var result = graph.ConvertFromId(currentNode);
 
             for (var i = 0; i < someMap.GetLength(0); i++) {
                 var s = "";
                 for (var j = 0; j < someMap.GetLength(1); j++) {
                     char thingToDisplay;
-                    if (i == row && j == column) {
+                    if (i == result.X && j == result.Y) {
                         thingToDisplay = 'X';
                     }
                     else {

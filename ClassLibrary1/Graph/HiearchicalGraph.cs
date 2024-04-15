@@ -13,9 +13,9 @@ public class HiearchicalGraph {
 
     private const int oneEdgeLimit = 6;
 
-    private Graph.Graph LowLevelGraph;
+    private Graph.Graph<Coords> LowLevelGraph;
 
-    private Graph.Graph AbstractGraph;
+    //private Graph.Graph AbstractGraph;
 
     public HiearchicalGraph(int[,] map, int clusterSize) {
         this.map = map;
@@ -23,7 +23,12 @@ public class HiearchicalGraph {
         var graphBuilder = new GraphBuilderFromMapWithDiagonals(map);
         LowLevelGraph = graphBuilder.BuildGraph();
 
-        ClusterSet = new ClusterSet(map, clusterSize);
+        ClusterSet = new ClusterSet(map, clusterSize, LowLevelGraph);
+        
+        //create all the freaking nodes
+        // and their intra connections
+        
+        
         
         // create a graph that has the following connections
 

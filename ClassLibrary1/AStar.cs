@@ -1,41 +1,58 @@
 ﻿namespace ClassLibrary1;
 
-public class AStar {
+public class AStar<T> {
     private readonly PriorityQueue<int, float> frontier = new PriorityQueue<int, float>();
     private Dictionary<int, int> cameFrom = new Dictionary<int, int>();
     private Dictionary<int, float> costSoFar = new Dictionary<int, float>();
 
-    private readonly Graph.Graph g;
+    private readonly Graph.Graph<T> g;
     private readonly int startId;
     private readonly int endId;
 
     private bool completed = false;
 
-    private readonly (int, int) EndPointCoords;
+    private readonly T EndPointData;
 
-    private readonly Func<(int, int), (int, int), int> heuristic;
-    private readonly Func<(int, int), bool> filter;
+    private readonly Func<T, T, int> heuristic;
+    private readonly Func<T, bool> filter;
 
-    public AStar(Graph.Graph g, int start, int end, Func<(int, int), (int, int), int> heuristic,
-        Func<(int, int), bool> filter) {
+    public AStar(Graph.Graph<T> g, int start, int end, Func<T, T, int> heuristic,
+        Func<T, bool> filter) {
         this.g = g;
-        startId = g.Nodes[start].id;
-        endId = g.Nodes[end].id;
+        startId = g.Nodes[start].Id;
+        endId = g.Nodes[end].Id;
         frontier.Enqueue(startId, 0);
         completed = false;
         cameFrom[startId] = -1;
         costSoFar[start] = 0;
-        EndPointCoords = g.ConvertFromId(end);
+        EndPointData = g.ConvertFromId(end);
         this.heuristic = heuristic;
         this.filter = filter;
     }
 
-    public AStar(Graph.Graph g, int startX, int startY, int endX, int endY, Func<(int, int), (int, int), int> heuristic,
-        Func<(int, int), bool> filter) :
+    public AStar(Graph.Graph<T> g, T startNodeData, T endNodeData, Func<T, T, int> heuristic,
+        Func<T, bool> filter) :
         this(g,
-            g.ConvertToId(startX, startY),
-            g.ConvertToId(endX, endY),
+            g.ConvertToId(startNodeData),
+            g.ConvertToId(endNodeData),
             heuristic, filter) {
+    }
+
+    public bool ExecuteToCompletion(out int[] path, out float cost) {
+        while (!this.ExecuteStep()) {
+            ;
+        }
+
+
+        path = GetPath();
+        cost = default;
+
+        if (path == Array.Empty<int>()) {
+            return false;
+        }
+
+        cost = GetPathCost();
+        return true;
     }
 
     public bool ExecuteStep() {
@@ -62,7 +79,7 @@ public class AStar {
                 if (!costSoFar.ContainsKey(next) || newCost < costSoFar[next]) {
                     costSoFar[next] = newCost;
                     var nextCoords = g.ConvertFromId(next);
-                    var priority = newCost + heuristic(EndPointCoords, nextCoords);
+                    var priority = newCost + heuristic(EndPointData, nextCoords);
                     frontier.Enqueue(next, newCost);
                     cameFrom[next] = currentNode;
                 }

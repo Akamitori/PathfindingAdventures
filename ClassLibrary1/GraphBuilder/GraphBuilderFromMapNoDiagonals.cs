@@ -1,9 +1,10 @@
 ﻿using ClassLibrary1.Graph;
+using ClassLibrary1.HierachicalGraph;
 using ClassLibrary1.HierarchicalGraph;
 
 namespace ClassLibrary1.GraphBuilder;
 
-public class GraphBuilderFromMap : IGraphBuilder {
+public class GraphBuilderFromMap : IGraphBuilder<Coords> {
     private readonly int[,] map;
     protected readonly int numberOfEdges;
     protected Bounds2D mapBounds;
@@ -14,11 +15,11 @@ public class GraphBuilderFromMap : IGraphBuilder {
         mapBounds = new Bounds2D(map.GetLength(0), map.GetLength(1));
     }
 
-    public Graph.Graph BuildGraph() {
+    public Graph.Graph<Coords> BuildGraph() {
         var numberOfNodes = mapBounds.FirstDimensionEnd * mapBounds.SecondDimensionEnd;
         var adjacencyTable = new EdgeInfo[numberOfNodes, numberOfEdges];
         var nodeCount = 0;
-        var nodeSet = new Node[numberOfNodes];
+        var nodeSet = new Node<Coords>[numberOfNodes];
 
 
         for (var i = 0; i < mapBounds.FirstDimensionEnd; i++) {
@@ -27,7 +28,7 @@ public class GraphBuilderFromMap : IGraphBuilder {
 
 
                 var nodeId = ConvertToId(i, j, mapBounds.SecondDimensionEnd);
-                var node = new Node(i, j, nodeId);
+                var node = new Node<Coords>(new Coords(i, j), nodeId);
                 nodeSet[nodeCount] = node;
 
                 for (var k = 0; k < neighborIndexes.Count; k++) {
@@ -65,7 +66,7 @@ public class GraphBuilderFromMap : IGraphBuilder {
     protected virtual float CalculateEdgeCost(int neighborCost, (int i, int j) valueTuple, (int x, int y) valueTuple1) {
         return neighborCost >= 0 ? neighborCost : int.MaxValue;
     }
-    
+
     private static int ConvertToId(int x, int y, int gridColumns) {
         return x * gridColumns + y;
     }
