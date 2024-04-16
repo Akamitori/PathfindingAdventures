@@ -179,11 +179,7 @@ public class HierarchicalGraphBuilder : IGraphBuilder<ClusterNodeInfo> {
         int neighborId, float cost) {
         var neighbor1Index = neighborCount.GetValueOrDefault(tileId, 0);
         neighborCount[tileId] = neighbor1Index + 1;
-
-        if (tileId == 0) {
-            ;
-        }
-
+        
         adjacencyGraph[tileId, neighbor1Index] = new EdgeInfo() {
             cost = cost,
             enabled = true,

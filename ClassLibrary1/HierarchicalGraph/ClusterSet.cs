@@ -45,8 +45,8 @@ public class ClusterSet {
                 var endRow = startRow + sectorRows - 1;
                 var endColumn = startColumn + sectorColumns - 1;
 
-                var cluster = new Cluster(clusterCounter, sectorRows, sectorColumns, startRow, endRow, startColumn,
-                    endColumn);
+                var cluster = new Cluster(clusterCounter, sectorRows, sectorColumns, startColumn,
+                    endColumn, startRow, endRow);
 
                 var clusterItemCounter = 0;
                 for (var localY = 0; localY < sectorRows; localY++) {
@@ -106,9 +106,8 @@ public class ClusterSet {
     }
 
     private Coords ConvertFromId(int id, int secondDimension) {
-        var columns = secondDimension;
-        var row = id / columns;
-        var column = id % columns;
+        var row = id / secondDimension;
+        var column = id % secondDimension;
         return new Coords(column, row);
     }
 

@@ -8,11 +8,11 @@ public struct Coords : IEquatable<Coords> {
         X = x;
         Y = y;
     }
-    
+
     public override bool Equals(object? obj) {
         return obj is Coords other && Equals(other);
     }
-    
+
     public bool Equals(Coords other) {
         return X == other.X && Y == other.Y;
     }
@@ -27,5 +27,9 @@ public struct Coords : IEquatable<Coords> {
 
     public static bool operator !=(Coords left, Coords right) {
         return !left.Equals(right);
+    }
+
+    public override string ToString() {
+        return $"({X},{Y})";
     }
 }

@@ -11,7 +11,10 @@ public class AStarPoc {
         var x = graphBuilder.BuildGraph();
 
         int ManhattanDistanceHeuristic(Coords a, Coords b) => Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y);
-        var algo = new AStar<Coords>(x, new Coords(0, 0), new Coords(1, 2), ManhattanDistanceHeuristic, _ => true);
+        var algo = new AStar<Coords>(x,
+            new Coords(3, 5),
+            new Coords(2, 0),
+            ManhattanDistanceHeuristic, _ => true);
 
         while (!algo.ExecuteStep()) {
             ;

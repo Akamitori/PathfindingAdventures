@@ -10,4 +10,5 @@ public struct ClusterNodeInfo {
         NodeCoords = nodeCoords;
         ClusterId = clusterId;
     }
+    
 }

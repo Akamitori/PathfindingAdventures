@@ -15,10 +15,11 @@ public class HiearchicalGraphPoc {
         int ManhattanDistanceHeuristic(ClusterNodeInfo a, ClusterNodeInfo b) =>
             Math.Abs(a.NodeCoords.X - b.NodeCoords.X) + Math.Abs(a.NodeCoords.Y - b.NodeCoords.Y);
 
+        // // from (5,3) to (0,2)
         var a = new AStar<ClusterNodeInfo>(g,
-            new ClusterNodeInfo(new Coords(3, 1), -1),
-            new ClusterNodeInfo(new Coords(1, 1), -1),
-            ManhattanDistanceHeuristic,
+            new ClusterNodeInfo(new Coords(3, 5), -1),
+            new ClusterNodeInfo(new Coords(2, 0), -1),
+            (_,_)=>0,
             _ => true
         );
 
@@ -37,6 +38,7 @@ public class HiearchicalGraphPoc {
 
         var s = "[";
         for (var i = 0; i < result.GetLength(0); i++) {
+            var nodeInfo = g.ConvertFromId(result[i]);
             s += $"{result[i]}, ";
         }
 

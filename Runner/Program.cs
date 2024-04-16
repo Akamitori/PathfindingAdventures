@@ -22,12 +22,16 @@ int[,] someMap = new[,] {
     // { 2, 5, 1, 1, 2, 5, 1, 1, 2, 5, 1, 1, 2, 5, 1, 1 },
     // { 2, 5, 1, 1, 2, 5, 1, 1, 2, 5, 1, 1, 2, 5, 1, 1 },
     
-    { 0, 5,         1,1,  },
-    { -1, 5,        -1,0, },
-    { 2, 5,         1, 1,  },
-    { 2, 5,         1, 1   },
+    { 0, 5,0,        1, 1,1,  },
+    { -1, 5,0,      -1,  -1,0 },
+    { 2, 5, 3,       2, 1, 1,  }, // from (5,3) to (0,2)
+    { 0, 5,0,        1, 1,1,  },
+    { -1, 5,0,      -1,  -1,0 },
+    { 2, 5, 1,       1, 1, 1,  },
     
 };
 
-HiearchicalGraphPoc.Run(someMap, 2);
+//TODO we need to check and make sure that all the expected neighbors are there. we can probably hardcode a few assertions
+//we probably need to redo this in order to actually insert start and end points into the graph!
+HiearchicalGraphPoc.Run(someMap, 3);
 //AStarPoc.Run(someMap);
